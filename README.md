@@ -9,6 +9,7 @@ This framework draws inspiration from the methodologies and tools used by many s
 *   The broader bug bounty hunting community and their shared knowledge.
 *   Public writeups and presentations on reconnaissance techniques.
 *   Developers of the excellent open-source tools used in this framework.
+*   @Coffinxp
 
 This is a synthesis of best practices, not a copy of any single person's approach.
 
@@ -266,7 +267,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             *   **What:**  Tries different `Host` headers to find virtual hosts on the same IP. `-w` is the wordlist, `-u` is the URL, `-H` sets the `Host` header, `-fs 0` filters by response size (removes common responses).
             *   **Why:** Discovers hidden websites hosted on shared infrastructure.
 
-    *    **Phase 9: Parameter Fuzzing**
+    * **Phase 9: Parameter Fuzzing**
 
       
       27. **Parameter Fuzzing (XSS Example):**
@@ -286,12 +287,13 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             * **Why:** Visual inspection can reveal interesting features, login panels, or outdated software versions that might not be apparent from automated scans.
 
     * **Phase 11: sort.py**
-        29. **Run custom sorting script**:
+      
+        29. **Run custom sorting script:**
             ```bash
-           python3 /home/USER/Documents/Python\ Scripts/sort.py
+            python3 sort.py
             ```
-           * **What**: Sorts and filters the parameters
-           *  **Why**: makes output easier to look through
+      *   **What:** Sorts and filters the parameters.
+      *   **Why:** makes output easier to look through.
 
 ## About `sort.py`
 
