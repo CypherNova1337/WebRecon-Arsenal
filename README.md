@@ -42,14 +42,32 @@ This guide presents a multi-stage reconnaissance process that blends automated t
 
 1.  **Preparation (One-Time Setup):**
 
-    *   Install the required tools (see the Tool Installation section below for detailed instructions).
+    *   Install the required tools (see the install.md for detailed instructions).
     *   Create or obtain the necessary wordlists:
         *   `permutation_wordlist.txt`: For subdomain permutations (common prefixes, suffixes, numbers).  *Example: dev, test, staging, backup, 1, 2023, etc.*
+             Good one to start with is: 
+             ```bash
+             https://gist.github.com/six2dez/ffc2b14d283e8f8eff6ac83e20a3c4b4
+             ```
         *   `vhost_wordlist.txt`: For virtual host discovery (common hostnames, your discovered subdomains). *Example: www, mail, dev, admin, etc.*
-        *   `parameter_fuzzing_wordlist.txt`: For fuzzing parameters.  SecLists is a good source.
+            Good one to start with is:
+            ```bash
+            https://github.com/maverickNerd/wordlists/blob/master/vhost.txt
+            ```
+        *   `parameter_fuzzing_wordlist.txt`: For fuzzing parameters.  SecLists is a good source:
+            ```bash
+            git clone https://github.com/danielmiessler/SecLists.git
+            ```
         *   `xss_wordlist.txt`: For XSS payloads (SecLists).
+            SecLists/Fuzzing/XSS/robot-friendly
         *   `resolvers.txt`: A list of known-good DNS resolvers.
+            ```bash
+            git clone https://github.com/trickest/resolvers.git
+            ```
         *   `/home/USER/Documents/oneListForall/onelistforallshort.txt`: Your general-purpose directory brute-forcing wordlist. *Ensure this path is correct.*
+            ```bash
+            git clone https://github.com/six2dez/OneListForAll/blob/main/onelistforallshort.txt
+            ```
         *  `/home/USER/Documents/nuclei-templates/`: Your Nuclei templates directory. *Ensure this path is correct.*
 
 2.  **Reconnaissance Steps:**
