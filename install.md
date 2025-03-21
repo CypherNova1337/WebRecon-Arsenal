@@ -38,21 +38,18 @@ source ~/.bashrc
 These are installed with go install. Each command downloads, compiles, and installs a tool into $GOPATH/bin.
 ```bash
 
-go install -v [github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest](https://www.google.com/search?q=https://github.com/projectdiscovery/subfinder/v2/cmd/subfinder%40latest)
-go install -v [github.com/projectdiscovery/httpx/cmd/httpx@latest](https://www.google.com/search?q=https://github.com/projectdiscovery/httpx/cmd/httpx%40latest)
-go install -v [github.com/projectdiscovery/naabu/v2/cmd/naabu@latest](https://www.google.com/search?q=https://github.com/projectdiscovery/naabu/v2/cmd/naabu%40latest)
-go install -v [github.com/lc/subjs@latest](https://www.google.com/search?q=https://github.com/lc/subjs%40latest)
-go install -v [github.com/tomnomnom/anew@latest](https://www.google.com/search?q=https://github.com/tomnomnom/anew%40latest)
-go install -v [github.com/tomnomnom/gf@latest](https://www.google.com/search?q=https://github.com/tomnomnom/gf%40latest)
-go install -v [github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest](https://www.google.com/search?q=https://github.com/dwisiswant0/crlfuzz/cmd/crlfuzz%40latest)
-go install -v [github.com/devanshbatham/openredirex@latest](https://www.google.com/search?q=https://github.com/devanshbatham/openredirex%40latest)
-go install [github.com/d3mondev/puredns/v2/cmd/puredns@latest](https://www.google.com/search?q=https://github.com/d3mondev/puredns/v2/cmd/puredns%40latest)
-go install -v [github.com/hahwul/dalfox/v2@latest](https://www.google.com/search?q=https://github.com/hahwul/dalfox/v2%40latest)
-go install -v [github.com/jaeles-project/gospider@latest](https://www.google.com/search?q=https://github.com/jaeles-project/gospider%40latest)
-go install -v [github.com/LukaSikic/subzy@latest](https://www.google.com/search?q=https://github.com/LukaSikic/subzy%40latest)
-go install -v [github.com/tomnomnom/waybackurls@latest](https://www.google.com/search?q=https://github.com/tomnomnom/waybackurls%40latest)
-go install [github.com/tomnomnom/uro@latest](https://www.google.com/search?q=https://github.com/tomnomnom/uro%40latest)
-go install -v [github.com/michenriksen/aquatone@latest](https://www.google.com/search?q=https://github.com/michenriksen/aquatone%40latest)
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install -v github.com/lc/subjs@latest
+go install -v github.com/tomnomnom/anew@latest
+go install -v github.com/tomnomnom/gf@latest
+go install -v github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest
+go install github.com/d3mondev/puredns/v2@latest
+go install -v github.com/hahwul/dalfox/v2@latest
+go install -v github.com/jaeles-project/gospider@latest
+go install -v github.com/PentestPad/subzy@latest
+go install -v github.com/tomnomnom/waybackurls@latest
 ```
   subfinder: Fast subdomain enumeration.
   
@@ -68,8 +65,6 @@ go install -v [github.com/michenriksen/aquatone@latest](https://www.google.com/s
   
   crlfuzz: CRLF injection fuzzer.
   
-  openredirex: Open redirect fuzzer.
-  
   puredns: Fast DNS resolver.
   
   dalfox: XSS scanner.
@@ -80,9 +75,6 @@ go install -v [github.com/michenriksen/aquatone@latest](https://www.google.com/s
   
   waybackurls: Finds URLs from Wayback Machine.
   
-  uro: Helps gather and filter URLs.
-  
-  aquatone: Takes website screenshots.
   
 
 4. Install Python-Based Tools
@@ -123,7 +115,20 @@ pip3 install -r requirements.txt
 ```
   SecretFinder: Finds secrets in JavaScript files.
 
-8. Tool-Specific Notes
+7. Install OpenRedirex
+   ```bash
+   git clone https://github.com/devanshbatham/openredirex
+   cd openredirex
+   sudo chmod +x setup.sh
+   ./setup.sh
+   ```
+8. Install Uro
+   ```bash
+   pipx install uro
+   ```
+   NOTE: if using older version of python, pip will work for installing as well.
+   
+9. Tool-Specific Notes
 
     gau: Needs a config file (API keys). See: https://github.com/lc/gau
    
