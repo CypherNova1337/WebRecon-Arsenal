@@ -50,6 +50,7 @@ go install -v github.com/hahwul/dalfox/v2@latest
 go install -v github.com/jaeles-project/gospider@latest
 go install -v github.com/PentestPad/subzy@latest
 go install -v github.com/tomnomnom/waybackurls@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
 ```
   subfinder: Fast subdomain enumeration.
   
