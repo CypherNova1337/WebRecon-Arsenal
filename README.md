@@ -112,13 +112,12 @@ This guide presents a multi-stage reconnaissance process that blends automated t
         3.  **Permutation Scanning (dnsgen + puredns + httpx):**
             ```bash
             dnsgen /path/to/your/subdomains.txt -w /path/to/permutations_list.txt > dnsgen_output.txt
-            puredns resolve dnsgen_output.txt -r /path/to/resolvers.txt -w permuted_subdomains.txt
-            puredns wildcards permuted_subdomains.txt --output filtered_permuted_subdomains.txt
-            cat subdomains.txt filtered_permuted_subdomains.txt | anew all_subdomains.txt
+            puredns resolve dnsgen_output.txt -r /path/to/resolvers.txt -w permuted_subdomains.txt --wildcard-tests 5
+            cat subdomains.txt permuted_subdomains.txt | anew all_subdomains.txt
             ```
             *   **What:** `dnsgen` creates subdomain variations. `puredns` resolves them (checks for valid IPs) using your `resolvers.txt` list. Finally, the results are combined.
             *   **Why:** Finds hidden subdomains with predictable naming patterns.
-            *   **Note:** This can take some time, but it is worth every second. Also, you'll this is a high bandwith scan, meaning it might cause issues with other devices like a gaming console on the same network. So if potentially disrupting other things on the network is a no go, then skip this step. Youll still have a good attack field, just might miss some stuff. Also dont combine this scan with other background scans like dirsearch.
+            *   **Note:** This can take some time, but it is worth every second. Also, PureDNS is a high bandwith scan, meaning it might cause issues with other devices like a gaming console on the same network. So if potentially disrupting other things on the network is a no go, then skip this step. Youll still have a good attack field, just might miss some stuff. Also dont combine this scan with other background scans like dirsearch.
 
     *   **Phase 2: Subdomain Probing and Filtering**
 
