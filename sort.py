@@ -1,5 +1,5 @@
 # Read the word list from the file
-with open('filterparam.txt, 'r') as file:
+with open('params.txt, 'r') as file:
 	lines = file.readlines()
 
 # Sort the lines
