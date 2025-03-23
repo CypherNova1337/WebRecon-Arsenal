@@ -147,7 +147,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
 
         7.  **Waybackurls:**
              ```bash
-             cat subdomains_alive.txt | waybackurls >> allurls.txt
+             cat subdomains_alive.txt | waybackurls | anew allurls.txt
               ```
             * **What:** Another tool using Wayback Machine
             *  **Why**: Gets more Urls
