@@ -100,6 +100,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             ```
             *   **What:** Queries crt.sh for subdomains. `curl` fetches data, `jq` extracts domain names, `sed` removes wildcards, `anew` appends to `subdomains.txt` (no duplicates).
             *   **Why:** Finds subdomains from certificate transparency logs, often revealing hidden ones.
+            *   **Note:** Do this manually for each domain. It gathers a lot of useful information.
 
         3.  **Permutation Scanning (dnsgen + puredns + httpx):**
             ```bash
