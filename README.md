@@ -102,6 +102,13 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             *   **Why:** Finds subdomains from certificate transparency logs, often revealing hidden ones.
             *   **Note:** Do this manually for each domain. It gathers a lot of useful information. If you get something like parse error: Invalid numeric literal at line 1, column 10 just do it again and it should be fine.
 
+              **Optional Step:** If you have specific subdomains or things like contact forms that are Out Of Scope you can run the following to filter them out:
+            ```bash
+            grep -v -E "sub\.domain\.com|contact|sub2\.domain\.com" subdomains.txt > filtered_subdomains.txt
+            ```
+            That will remove sub.domain.com, anything regarding contact forms, and sub.domain.com2 and put the rest of the subdomains into a filtered_subdomains.txt file. IF YOU DO THIS you must replace anything following that has to do with "subdomains.txt" like step 3, with "filtered_subdomains.txt".
+
+
         3.  **Permutation Scanning (dnsgen + puredns + httpx):**
             ```bash
             cat subdomains.txt | dnsgen -w /path/to/your/permutation_wordlist.txt | puredns resolve -r /path/to/your/resolvers.txt -w permuted_subdomains.txt --wildcard-tests 5 --wildcard-threshold 0.8
