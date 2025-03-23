@@ -91,7 +91,7 @@ pip3 install dnsgen requests beautifulsoup4 ffuf
 5. Install Nuclei
 ```bash
 
-wget [https://github.com/projectdiscovery/nuclei/releases/download/v3.1.9/nuclei_3.1.9_linux_amd64.zip](https://github.com/projectdiscovery/nuclei/releases/download/v3.1.9/nuclei_3.1.9_linux_amd64.zip) # Check for newest
+wget https://github.com/projectdiscovery/nuclei/releases/download/v3.1.9/nuclei_3.1.9_linux_amd64.zip # Check for newest
 unzip nuclei_3.1.9_linux_amd64.zip
 sudo mv nuclei /usr/local/bin/
 nuclei -update-templates
@@ -101,7 +101,7 @@ nuclei -update-templates
 6. Install Corsy
 ```bash
 
-git clone [https://github.com/s0md3v/Corsy.git](https://github.com/s0md3v/Corsy.git)
+git clone https://github.com/s0md3v/Corsy.git
 cd Corsy
 pip3 install -r requirements.txt
 ```
@@ -110,7 +110,7 @@ pip3 install -r requirements.txt
 7. Install SecretFinder
 ```bash
 
-git clone [https://github.com/m4ll0k/SecretFinder.git](https://github.com/m4ll0k/SecretFinder.git)
+git clone https://github.com/m4ll0k/SecretFinder.git
 cd SecretFinder
 pip3 install -r requirements.txt
 ```
