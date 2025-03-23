@@ -69,6 +69,11 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             git clone https://github.com/six2dez/OneListForAll
             ```
         *  `/home/USER/Documents/nuclei-templates/`: Your Nuclei templates directory. *Ensure this path is correct.*
+           
+          I highly recommend using Coffinxp's GF Patterns. Download them and copy them to your .gf folder in USER/.gf (hidden folder) Say yes to merging and replacing.
+           ```bash
+           git clone https://github.com/coffinxp/GFpattren
+           ```
 
 2.  **Reconnaissance Steps:**
 
