@@ -100,7 +100,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             ```
             *   **What:** Queries crt.sh for subdomains. `curl` fetches data, `jq` extracts domain names, `sed` removes wildcards, `anew` appends to `subdomains.txt` (no duplicates).
             *   **Why:** Finds subdomains from certificate transparency logs, often revealing hidden ones.
-            *   **Note:** Do this manually for each domain. It gathers a lot of useful information.
+            *   **Note:** Do this manually for each domain. It gathers a lot of useful information. If you get something like parse error: Invalid numeric literal at line 1, column 10 just do it again and it should be fine.
 
         3.  **Permutation Scanning (dnsgen + puredns + httpx):**
             ```bash
