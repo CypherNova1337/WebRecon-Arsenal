@@ -123,7 +123,8 @@ This guide presents a multi-stage reconnaissance process that blends automated t
 
         4.  **httpx (Live Host Discovery):**
             ```bash
-            cat subdomains.txt | httpx -ports 80,443,8080,8000,8888 -threads 200 -o subdomains_alive.txt -title -tech-detect
+            cat subdomains.txt | httpx -ports 80,443,8080,8000,8888 -threads 200 -title -tech-detect -o Tech_Subdomains_alive.txt
+            cat Tech_Subdomains_alive.txt | awk '{print $1}' | sort -u > subdomains_alive.txt
             ```
             *   **What:** Checks which subdomains have active web servers. `-ports` specifies common HTTP/HTTPS ports. `-threads` sets concurrency. `-o` saves live subdomains. `-title` and `-tech-detect` gather extra info.
             *   **Why:** Focuses on live targets and provides initial reconnaissance data.
