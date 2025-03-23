@@ -26,7 +26,7 @@ sudo apt install -y jq curl nmap dnsutils gobuster feroxbuster python3 python3-p
 This installs Go and sets up your GOPATH.
 ```bash
 
-wget [https://golang.org/dl/go1.21.0.linux-amd64.tar.gz](https://golang.org/dl/go1.21.0.linux-amd64.tar.gz) # Check golang.org for the newest
+wget https://golang.org/dl/go1.21.0.linux-amd64.tar.gz # Check golang.org for the newest
 sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 echo 'export GOPATH=$HOME/go' >> ~/.bashrc
