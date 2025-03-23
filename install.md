@@ -19,7 +19,7 @@ These are essential utilities.
 
 ```bash
 sudo apt update
-sudo apt install -y jq curl nmap dnsutils gobuster feroxbuster python3 python3-pip git
+sudo apt install -y jq curl nmap dnsutils gobuster python3 python3-pip git
 ```
 2. Install Go
 
@@ -81,12 +81,11 @@ go install github.com/lc/gau/v2/cmd/gau@latest
 4. Install Python-Based Tools
 ```bash
 
-pip3 install dnsgen requests beautifulsoup4 ffuf
+pip3 install dnsgen requests beautifulsoup4 
 ```
   dnsgen: Generates subdomain permutations.
   requests: Makes HTTP requests (used by other tools).
   beautifulsoup4: HTML parser (used by other tools).
-  ffuf: Web fuzzer.
 
 5. Install Nuclei
 ```bash
