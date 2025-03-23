@@ -66,7 +66,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             ```
         *   `/home/USER/Documents/oneListForall/onelistforallshort.txt`: Your general-purpose directory brute-forcing wordlist. *Ensure this path is correct.*
             ```bash
-            git clone https://github.com/six2dez/OneListForAll/blob/main/onelistforallshort.txt
+            git clone https://github.com/six2dez/OneListForAll
             ```
         *  `/home/USER/Documents/nuclei-templates/`: Your Nuclei templates directory. *Ensure this path is correct.*
 
