@@ -118,7 +118,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             ```
             *   **What:** `dnsgen` creates subdomain variations. `puredns` resolves them (checks for valid IPs) using your `resolvers.txt` list. Finally, the results are combined.
             *   **Why:** Finds hidden subdomains with predictable naming patterns.
-            *   **Note:** This can take some time, but it is worth every second.
+            *   **Note:** This can take some time, but it is worth every second. Also, you'll this is a high bandwith scan, meaning it might cause issues with other devices like a gaming console on the same network. So if potentially disrupting other things on the network is a no go, then skip this step. Youll still have a good attack field, just might miss some stuff. Also dont combine this scan with other background scans like dirsearch.
 
     *   **Phase 2: Subdomain Probing and Filtering**
 
