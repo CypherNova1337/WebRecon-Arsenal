@@ -19,7 +19,7 @@ These are essential utilities.
 
 ```bash
 sudo apt update
-sudo apt install -y jq curl nmap dnsutils gobuster python3 python3-pip git
+sudo apt install -y jq curl nmap dnsutils gobuster python3 python3-pip git massdns
 ```
 2. Install Go
 
