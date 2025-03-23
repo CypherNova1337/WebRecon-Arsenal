@@ -111,11 +111,14 @@ This guide presents a multi-stage reconnaissance process that blends automated t
 
         3.  **Permutation Scanning (dnsgen + puredns + httpx):**
             ```bash
-            cat subdomains.txt | dnsgen -w /path/to/your/permutation_wordlist.txt | puredns resolve -r /path/to/your/resolvers.txt -w permuted_subdomains.txt --wildcard-tests 5 --wildcard-threshold 0.8
-            cat subdomains.txt permuted_subdomains.txt | anew subdomains.txt
+            dnsgen /path/to/your/subdomains.txt -w /path/to/permutations_list.txt > dnsgen_output.txt
+            puredns resolve dnsgen_output.txt -r /path/to/resolvers.txt -w permuted_subdomains.txt
+            puredns wildcards permuted_subdomains.txt --output filtered_permuted_subdomains.txt
+            cat subdomains.txt filtered_permuted_subdomains.txt | anew all_subdomains.txt
             ```
-            *   **What:** `dnsgen` creates subdomain variations. `puredns` resolves them (checks for valid IPs) using your `resolvers.txt` list. `--wildcard-tests` and `--wildcard-threshold` filter false positives. Finally, the results are combined.
+            *   **What:** `dnsgen` creates subdomain variations. `puredns` resolves them (checks for valid IPs) using your `resolvers.txt` list. Finally, the results are combined.
             *   **Why:** Finds hidden subdomains with predictable naming patterns.
+            *   **Note:** This can take some time, but it is worth every second.
 
     *   **Phase 2: Subdomain Probing and Filtering**
 
