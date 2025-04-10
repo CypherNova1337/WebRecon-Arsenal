@@ -200,7 +200,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
         13. **Dirsearch (Targeted Extensions - Iterative):**  Run this loop in your terminal.
             ```bash
             while read -r subdomain; do
-            dirsearch -u "$subdomain" -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,eb~,php,php~,bkp,cache,cgi,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,sql.gz,sql.zip,sql.tar.gz,sql~,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,.log,.xml,.js,.json -x 500,502,429,404,400 -R 2 --random-agent -t 20 -F -o "dirsearch_extensions_${subdomain}.txt"
+            dirsearch -u "$subdomain" -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,eb~,php,php~,bkp,cache,cgi,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,sql.gz,sql.zip,sql.tar.gz,sql~,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,.log,.xml,.js,.json -x 500,502,429,404,400 -R 2 --random-agent -t 20 -F -o "dirsearch_extensions_subdomain.txt"
             done < subdomains_alive.txt
             ```
             *   **What:**  Runs `dirsearch` for *each* live subdomain, focusing on specific file extensions (`-e`).
