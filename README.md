@@ -269,7 +269,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
 
         22. **Open Redirect (OpenRedirex):**
             ```bash
-            cat allurls.txt | gf redirect | openredirex -o open_redirects.txt
+            cat allurls.txt | gf redirect | openredirex >> open_redirects.txt
             ```
             *   **What:** Identifies potential open redirect vulnerabilities using `gf` patterns.
             *   **Why:** Prevents attackers from redirecting users to malicious sites.
