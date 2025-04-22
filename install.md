@@ -19,19 +19,14 @@ These are essential utilities.
 
 ```bash
 sudo apt update
-sudo apt install -y jq curl nmap dnsutils gobuster python3 python3-pip git massdns
+sudo apt-get -y install jq curl nmap dnsutils gobuster python3 python3-pip git massdns
 ```
 2. Install Go
 
 This installs Go and sets up your GOPATH.
 ```bash
-
-wget https://golang.org/dl/go1.21.0.linux-amd64.tar.gz # Check golang.org for the newest
-sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
-echo 'export GOPATH=$HOME/go' >> ~/.bashrc
-echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
-source ~/.bashrc
+sudo apt install gccgo-go
+sudo apt install golang-go
 ```
 3. Install Go-Based Tools
 
