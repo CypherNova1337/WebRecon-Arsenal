@@ -48,6 +48,7 @@ go install -v github.com/jaeles-project/gospider@latest
 go install -v github.com/PentestPad/subzy@latest
 go install -v github.com/tomnomnom/waybackurls@latest
 go install github.com/lc/gau/v2/cmd/gau@latest
+CGO_ENABLED=1 go install github.com/projectdiscovery/katana/cmd/katana@latest
 ```
   subfinder: Fast subdomain enumeration.
   
