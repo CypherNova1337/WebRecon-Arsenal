@@ -25,8 +25,10 @@ sudo apt-get -y install jq curl nmap dnsutils gobuster python3 python3-pip git m
 
 This installs Go and sets up your GOPATH.
 ```bash
-sudo apt install gccgo-go
-sudo apt install golang-go
+wget https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+go version
 ```
 3. Install Go-Based Tools
 
