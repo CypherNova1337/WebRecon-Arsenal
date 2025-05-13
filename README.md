@@ -276,7 +276,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
 
         23. **XSS (dalfox):** Replace `your_xss_endpoint_here` with your blind XSS collaborator URL.
             ```bash
-            cat allurls.txt | dalfox -b your_xss_endpoint_here -o dalfox_xss.txt
+            cat allurls.txt | dalfox pipe -b your_xss_endpoint_here -o dalfox_xss.txt
             ```
             *   **What:**  Finds Cross-Site Scripting (XSS) vulnerabilities.
             *   **Why:** Prevents attackers from injecting malicious scripts.
