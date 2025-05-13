@@ -113,7 +113,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
             ```bash
             dnsgen /path/to/your/subdomains.txt -w /path/to/permutations_list.txt > dnsgen_output.txt
             puredns resolve dnsgen_output.txt -r /path/to/resolvers.txt -w permuted_subdomains.txt --wildcard-tests 5
-            cat subdomains.txt permuted_subdomains.txt | anew all_subdomains.txt
+            cat subdomains.txt permuted_subdomains.txt | anew subdomains.txt
             ```
             *   **What:** `dnsgen` creates subdomain variations. `puredns` resolves them (checks for valid IPs) using your `resolvers.txt` list. Finally, the results are combined.
             *   **Why:** Finds hidden subdomains with predictable naming patterns.
