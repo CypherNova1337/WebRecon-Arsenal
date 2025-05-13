@@ -313,7 +313,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
       
       27. **Parameter Fuzzing (XSS Example):**
             ```bash
-            cat allurls.txt | gf xss | ffuf -w /path/to/your/xss_wordlist.txt:FUZZ -u FUZZ -fs 0 -o ffuf_xss_results.txt
+            cat allurls.txt | gf xss | xargs -I TARGETURL ffuf -w /path/to/your/xss_wordlist.txt:FUZZ -u TARGETURL -fs 0 -o ffuf_xss_results.txt
             ```
             *   **What:**  Uses `gf` to find potential XSS parameters, then `ffuf` to fuzz those parameters with your `xss_wordlist.txt`.  `-fs 0` filters by response size.  This is an *example*; you can adapt this for other vulnerability types (SQLi, LFI, etc.) with different `gf` patterns and wordlists.
             *   **Why:**  Actively tests how the application handles potentially malicious input in parameters, looking for vulnerabilities.
