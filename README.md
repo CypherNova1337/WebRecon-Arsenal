@@ -305,6 +305,11 @@ This guide presents a multi-stage reconnaissance process that blends automated t
                 ffuf -w subdomains.txt:FUZZ -u https://$ip -H "Host: FUZZ.$TARGET" -fs 0 -o vhost_results_"$ip".txt
             done < ips.txt
             ```
+            If you do not have any ips or wish to also vhost fuzz domains you can do:
+            ```bash
+            ffuf -u https://TARGET.com -w path/to/vhost.txt:VHOST -H "Host: VHOST" -o domain_vhost.json -of json 
+            ```
+            
             *   **What:**  Tries different `Host` headers to find virtual hosts on the same IP. `-w` is the wordlist, `-u` is the URL, `-H` sets the `Host` header, `-fs 0` filters by response size (removes common responses).
             *   **Why:** Discovers hidden websites hosted on shared infrastructure.
 
