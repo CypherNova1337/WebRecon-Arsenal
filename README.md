@@ -133,7 +133,7 @@ This guide presents a multi-stage reconnaissance process that blends automated t
 
         5.  **Katana (Crawling):**
             ```bash
-            katana -u subdomains_alive.txt -d 5 -c 50 -kf -jc -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg >> allurls.txt
+            katana -u subdomains_alive.txt -d 5 -c 50 -kf all -jc -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg >> allurls.txt
             ```
             *   **What:** Crawls websites to discover links and resources. `-u` sets starting URLs, `-d` is crawl depth, `-kf`, `-jc`,`-fx`, and `-ef` specify file extractions.
             *   **Why:** Maps the website's structure and content.
