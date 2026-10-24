@@ -1,147 +1,162 @@
 # WebRecon-Arsenal: Tool Installation Guide
 
-This guide provides instructions for installing the tools used in the `WebRecon-Arsenal` reconnaissance framework. These instructions are primarily for **Debian/Ubuntu-based Linux distributions**. Adapt them as needed for other distributions (Fedora, Arch, CentOS) or macOS.
+This guide installs everything the `WebRecon-Arsenal` reconnaissance framework uses. Commands are for **Debian/Ubuntu**; adapt the package-manager lines for other distributions or macOS.
 
-## Important Notes
+Everything that isn't a Go binary or a system package goes in `~/tools/`. The commands in `README.md` assume that location.
 
-* **Tool Variety:** This framework uses tools written in **Go**, **Python**, and shell scripts.
-* **Multiple Uses:** Many tools have capabilities beyond what's used here. Explore their documentation!
-* **Configuration:** Some tools (e.g., `gau`) require configuration files (API keys). Refer to each tool's documentation.
-* **Organization:** Keep tools and wordlists in dedicated locations. Wordlist paths are not specified here (you'll obtain them separately).
+```bash
+mkdir -p ~/tools/wordlists
+```
 
-## Installation Steps
-
-Copy and paste each command block into your terminal.
-
-### 1. Basic System Tools (Debian/Ubuntu)
-
-These are essential utilities.
+## 1. System Packages
 
 ```bash
 sudo apt update
-sudo apt-get -y install jq curl nmap dnsutils gobuster python3 python3-pip git massdns
+sudo apt-get -y install git curl jq nmap python3 python3-pip pipx libpcap-dev p7zip-full chromium
+pipx ensurepath
 ```
-2. Install Go
 
-This installs Go and sets up your GOPATH.
+`libpcap-dev` is needed to build `naabu`. `chromium` is used by `httpx -screenshot` (on Ubuntu it may be `chromium-browser`, or install Google Chrome).
+
+## 2. Go
+
+Installs the current Go release (dns-helix and the other Go tools need 1.24 or newer).
+
 ```bash
-wget https://go.dev/dl/go1.24.2.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
+GO_VERSION=$(curl -s 'https://go.dev/VERSION?m=text' | head -1)
+wget "https://go.dev/dl/${GO_VERSION}.linux-amd64.tar.gz"
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "${GO_VERSION}.linux-amd64.tar.gz"
+echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
+source ~/.bashrc
 go version
 ```
-3. Install Go-Based Tools
 
-These are installed with go install. Each command downloads, compiles, and installs a tool into $GOPATH/bin.
+## 3. My Tools
+
+These are my own tools, used throughout the workflow.
+
 ```bash
+# WebRecon-Arsenal itself (for scope_filter.py and sort.py)
+git clone https://github.com/CypherNova1337/WebRecon-Arsenal ~/tools/WebRecon-Arsenal
 
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
-go install -v github.com/lc/subjs@latest
-go install -v github.com/tomnomnom/anew@latest
-go install -v github.com/tomnomnom/gf@latest
-go install -v github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest
-go install github.com/d3mondev/puredns/v2@latest
-go install -v github.com/hahwul/dalfox/v2@latest
-go install -v github.com/jaeles-project/gospider@latest
-go install -v github.com/PentestPad/subzy@latest
-go install -v github.com/tomnomnom/waybackurls@latest
-go install github.com/lc/gau/v2/cmd/gau@latest
+# Go tools
+go install github.com/CypherNova1337/dns-helix@latest
+go install github.com/CypherNova1337/paramvoid@latest
+go install github.com/cyphernova1337/sourcemapper@latest
+
+# Python tools installed as commands
+for t in VoidRecon LFI-Machine SmartSQL VoidStrike Auto-IDOR; do
+    git clone https://github.com/CypherNova1337/$t ~/tools/$t
+    pipx install ~/tools/$t
+done
+
+# Python tools run from their folder
+for t in Personal_Scipts NovaLure VoidOrigin VPNFinder; do
+    git clone https://github.com/CypherNova1337/$t ~/tools/$t
+    pip3 install -r ~/tools/$t/requirements.txt
+done
+
+# Nuclei templates and gf patterns
+git clone https://github.com/CypherNova1337/Personal_Nuclei_Templates ~/tools/Personal_Nuclei_Templates
+git clone https://github.com/CypherNova1337/Firebase_Nuclei ~/tools/Firebase_Nuclei
+git clone https://github.com/CypherNova1337/GF_Patterns ~/tools/GF_Patterns
+mkdir -p ~/.gf && cp ~/tools/GF_Patterns/*.json ~/.gf/
+
+# Code Specter is a bookmarklet: copy the contents of Code Specter.js into a bookmark's URL field
+git clone https://github.com/CypherNova1337/Code-Specter ~/tools/Code-Specter
+```
+
+On newer Debian/Ubuntu releases `pip3 install` outside a virtual environment is blocked. Either add `--break-system-packages`, or make a venv first (`python3 -m venv ~/tools/venv && source ~/tools/venv/bin/activate`) and run the `pip3` lines inside it.
+
+| Tool | What it does here |
+|---|---|
+| `scope_filter.py` | Keeps only your domains and their subdomains, and strips out-of-scope entries from every step's output |
+| [VoidRecon](https://github.com/CypherNova1337/VoidRecon) | Full recon pipeline with enforced scope (`voidrecon setup` after install to add API keys) |
+| [DNS-Helix](https://github.com/CypherNova1337/dns-helix) | Subdomain permutation and fast resolving (replaces dnsgen + puredns) |
+| [paramvoid](https://github.com/CypherNova1337/paramvoid) | Hidden HTTP parameter discovery |
+| [sourcemapper](https://github.com/cyphernova1337/sourcemapper) | Rebuilds original JavaScript source from source maps |
+| [Personal_Scipts](https://github.com/CypherNova1337/Personal_Scipts) | `webscan.py` (CORS, CRLF, hop-by-hop; replaces Corsy and crlfuzz) and `secretscan.py` (secrets in JS; replaces SecretFinder) |
+| [NovaLure](https://github.com/CypherNova1337/NovaLure) | Blind SSRF and open redirects via out-of-band callbacks (replaces OpenRedirex) |
+| [LFI-Machine](https://github.com/CypherNova1337/LFI-Machine) | Adaptive local file inclusion |
+| [SmartSQL](https://github.com/CypherNova1337/SmartSQL) | WAF-aware SQL injection |
+| [VoidStrike](https://github.com/CypherNova1337/VoidStrike) | RCE, SSTI, command injection, deserialisation |
+| [Auto-IDOR](https://github.com/CypherNova1337/Auto-IDOR) | IDOR testing with two real accounts |
+| [VoidOrigin](https://github.com/CypherNova1337/VoidOrigin) | Origin IP discovery behind a CDN |
+| [VPNFinder](https://github.com/CypherNova1337/VPNFinder) | VPN / remote-access gateway discovery and fingerprinting |
+| [Personal_Nuclei_Templates](https://github.com/CypherNova1337/Personal_Nuclei_Templates) | High-signal Nuclei templates, including subdomain takeovers (replaces subzy) |
+| [Firebase_Nuclei](https://github.com/CypherNova1337/Firebase_Nuclei) | Firebase service discovery template |
+| [GF_Patterns](https://github.com/CypherNova1337/GF_Patterns) | Modern gf patterns (`lfi`, `sqli`, `xss`, `rce`, `ssti`, `idor`, `firebase`, `js-sinks`, ...) |
+| [Code-Specter](https://github.com/CypherNova1337/Code-Specter) | In-browser DOM XSS sink and developer-note finder |
+
+## 4. Third-Party Tools
+
+```bash
+go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install github.com/projectdiscovery/httpx/cmd/httpx@latest
 CGO_ENABLED=1 go install github.com/projectdiscovery/katana/cmd/katana@latest
-```
-  subfinder: Fast subdomain enumeration.
-  
-  httpx: HTTP/HTTPS prober; checks for live web servers.
-  
-  naabu: Fast port scanner.
-  
-  subjs: Extracts URLs from JavaScript files.
-  
-  anew: Appends to a file, removing duplicates.
-  
-  gf: Provides patterns for grep.
-  
-  crlfuzz: CRLF injection fuzzer.
-  
-  puredns: Fast DNS resolver.
-  
-  dalfox: XSS scanner.
-  
-  gospider: Web spider.
-  
-  subzy: Subdomain takeover.
-  
-  waybackurls: Finds URLs from Wayback Machine.
-  
-  
+go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install github.com/tomnomnom/anew@latest
+go install github.com/tomnomnom/gf@latest
+go install github.com/tomnomnom/qsreplace@latest
+go install github.com/lc/subjs@latest
+go install github.com/hahwul/dalfox/v2@latest
+go install github.com/ffuf/ffuf/v2@latest
 
-4. Install Python-Based Tools
-```bash
+pipx install uro
+pipx install dirsearch
 
-pip3 install dnsgen requests beautifulsoup4 
-```
-  dnsgen: Generates subdomain permutations.
-  requests: Makes HTTP requests (used by other tools).
-  beautifulsoup4: HTML parser (used by other tools).
-
-5. Install Nuclei
-```bash
-
-wget https://github.com/projectdiscovery/nuclei/releases/download/v3.1.9/nuclei_3.1.9_linux_amd64.zip # Check for newest
-unzip nuclei_3.1.9_linux_amd64.zip
-sudo mv nuclei /usr/local/bin/
 nuclei -update-templates
 ```
-  nuclei: Vulnerability Scanner
 
-6. Install Corsy
+| Tool | What it does here |
+|---|---|
+| subfinder | Passive subdomain enumeration (`~/.config/subfinder/provider-config.yaml` for API keys) |
+| httpx | Probes subdomains, fingerprints technology, takes screenshots |
+| katana | Crawls the live subdomains |
+| gau / waybackurls | Historical URLs from public archives (`gau` reads API keys from `~/.gau.toml`) |
+| subjs | Extracts URLs from JavaScript files |
+| uro | Removes near-duplicate URLs |
+| anew / qsreplace | Deduplicated appends / query-string rewriting |
+| gf | Runs the GF_Patterns against URLs and files |
+| dirsearch | Directory and file brute-forcing |
+| nuclei | Template-based vulnerability scanning |
+| interactsh-client | Out-of-band callbacks, needed by NovaLure |
+| dalfox | XSS scanning |
+| naabu + nmap | Port and service scanning |
+| ffuf | Virtual host fuzzing |
+| jq | Parsing crt.sh output |
+
+## 5. Wordlists
+
 ```bash
-
-git clone https://github.com/s0md3v/Corsy.git
-cd Corsy
-pip3 install -r requirements.txt
+git clone https://github.com/danielmiessler/SecLists.git ~/tools/wordlists/SecLists
+git clone https://github.com/maverickNerd/wordlists.git ~/tools/wordlists/maverickNerd
+ln -s ~/tools/wordlists/maverickNerd/vhost.txt ~/tools/wordlists/vhost_wordlist.txt
 ```
-  Corsy: Checks for CORS misconfigurations.
 
-7. Install SecretFinder
+**OneListForAll:** The old `onelistforallshort.txt` is gone. The repo now builds `onelistforall.txt` (the curated micro list plus every category's short list). Download it from the [releases page](https://github.com/six2dez/OneListForAll/releases), where it ships as a 7z archive, and extract it with `7z x` so it ends up at `~/tools/wordlists/onelistforall.txt`.
+
+## 6. Keeping Up to Date
+
 ```bash
-
-git clone https://github.com/m4ll0k/SecretFinder.git
-cd SecretFinder
-pip3 install -r requirements.txt
+nuclei -update-templates
+voidrecon update
+for d in ~/tools/*/.git; do git -C "${d%/.git}" pull --ff-only; done
+cp ~/tools/GF_Patterns/*.json ~/.gf/
 ```
-  SecretFinder: Finds secrets in JavaScript files.
 
-7. Install OpenRedirex
-   ```bash
-   git clone https://github.com/devanshbatham/openredirex
-   cd openredirex
-   sudo chmod +x setup.sh
-   ./setup.sh
-   ```
-8. Install Uro
-   ```bash
-   pipx install uro
-   ```
-   NOTE: if using older version of python, pip will work for installing as well.
-   
-9. Tool-Specific Notes
+## Usage
 
-    gau: Needs a config file (API keys). See: https://github.com/lc/gau
-   
-    puredns: Needs a resolvers.txt file (DNS servers).
-   
-    dalfox: For blind XSS, use a "collaborator" server.
-   
-    Nuclei: Update templates: nuclei -update-templates.
-   
+Once the installation is complete, follow the step-by-step guide in the main `README.md`.
 
-10. Organization (Recommended)
+Organization (recommended):
 
-    Tools: /opt/tools, $HOME/tools, or /usr/local/bin (Go tools: $HOME/go/bin).
-    
-    Wordlists: A dedicated directory.
-    
-    Targets: A directory for each target.
-    
+* **Tools:** `~/tools/` (Go tools land in `~/go/bin`).
+* **Wordlists:** `~/tools/wordlists/`.
+* **Targets:** A directory for each target, each with its own `domains.txt` and `out_of_scope.txt`.
+
+Happy hunting!
