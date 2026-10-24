@@ -123,12 +123,24 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
         2.  **crt.sh (Certificate Transparency):**
             ```bash
             while read -r domain; do
-                curl -s "https://crt.sh/?q=%25.$domain&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' | anew subdomains_raw.txt
+                for q in "" "&exclude=expired"; do
+                    for try in 1 2 3; do
+                        json=$(curl -s -m 120 "https://crt.sh/?q=%25.$domain&output=json$q")
+                        echo "$json" | jq -e 'type == "array"' >/dev/null 2>&1 && break 2
+                        sleep $((try * 10))
+                    done
+                done
+                if echo "$json" | jq -e 'type == "array"' >/dev/null 2>&1; then
+                    echo "$json" | jq -r '.[].name_value' | sed 's/^\*\.//' | tr 'A-Z' 'a-z' | sort -u | anew subdomains_raw.txt
+                else
+                    echo "crt.sh failed for $domain, skipping (subfinder already queries crt.sh)" >&2
+                fi
+                sleep 5
             done < domains.txt
             ```
             *   **What:** Queries crt.sh for subdomains of each domain. `curl` fetches data, `jq` extracts domain names, `sed` removes wildcards, `anew` appends to `subdomains_raw.txt` (no duplicates).
             *   **Why:** Finds subdomains from certificate transparency logs, often revealing hidden ones.
-            *   **Note:** If you get something like `parse error: Invalid numeric literal at line 1, column 10`, crt.sh timed out. Just run it again and it should be fine.
+            *   **Note:** On big organizations crt.sh often can't finish the full-history query and returns an HTML `502 Bad Gateway` page instead of JSON. That page is what made jq throw `parse error: Invalid numeric literal`. The loop now checks that the response is real JSON before parsing it, retries three times with a growing wait, then falls back to `&exclude=expired` (live certificates only), which is much lighter and usually goes through. If both fail it says so and moves on to the next domain instead of printing jq errors.
 
         3.  **Remove Out-Of-Scope Subdomains:**
             ```bash
