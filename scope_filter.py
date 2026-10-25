@@ -18,6 +18,7 @@ one. Exclusions always win:
     /admin/billing        keyword, removing any line that contains it
 """
 import argparse
+import os
 import sys
 from urllib.parse import urlsplit
 
@@ -55,10 +56,16 @@ def main():
     p.add_argument("--apex-only", action="store_true", help="Only the exact roots; drop every subdomain")
     args = p.parse_args()
 
+    if not os.path.isfile(args.scope):
+        sys.exit(f"scope_filter: scope file not found: {args.scope} (run this from the target directory)")
     roots = [host_of(r[2:] if r.startswith("*.") else r) for r in read_list(args.scope)]
     roots = [r for r in roots if r]
+    if not roots:
+        sys.exit(f"scope_filter: no domains in {args.scope}")
     ex_hosts, ex_wild, ex_words = [], [], []
-    if args.exclude:
+    if args.exclude and not os.path.isfile(args.exclude):
+        print(f"scope_filter: {args.exclude} not found, filtering without exclusions", file=sys.stderr)
+    elif args.exclude:
         for e in read_list(args.exclude):
             if e.startswith("*."):
                 ex_wild.append(e[2:])
