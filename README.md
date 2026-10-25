@@ -102,13 +102,14 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
         *   `*.staging.domain.com` removes everything under `staging.domain.com` (but not `staging.domain.com` itself).
         *   Anything without a dot, or with a `/`, is a keyword: any line containing it is removed. `contact` drops anything regarding contact forms.
 
-        If nothing is out of scope, still create the file: `touch out_of_scope.txt`.
+        If nothing is out of scope you can skip the file; the filter just warns that it is missing and keeps going.
 
     *   **Load the Scope Filter:** Run this in the terminal you're working in. Every step below pipes its results through it.
         ```bash
         inscope() { python3 ~/tools/WebRecon-Arsenal/scope_filter.py -s domains.txt -x out_of_scope.txt "$@"; }
+        alias httpx="$HOME/go/bin/httpx"
         ```
-        *   **What:** Keeps only lines whose host is one of your domains or a subdomain of one, then removes anything matching `out_of_scope.txt`. It understands bare hosts, URLs, and tool output like httpx's.
+        *   **What:** Keeps only lines whose host is one of your domains or a subdomain of one, then removes anything matching `out_of_scope.txt`. It understands bare hosts, URLs, and tool output like httpx's. The `httpx` alias makes sure you get ProjectDiscovery's httpx, not the Python `httpx` command my tools install into a venv (that one fails with `No such option '-t'`).
         *   **Why:** This replaces the old one-off `grep -v` step. Because the out-of-scope list is applied everywhere, there's no separate `filtered_subdomains.txt` to remember to swap in — `subdomains.txt` is always the clean list.
 
     *   **Phase 1: Expanded Subdomain Enumeration**

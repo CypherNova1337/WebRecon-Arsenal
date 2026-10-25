@@ -68,6 +68,14 @@ git clone https://github.com/CypherNova1337/Code-Specter ~/tools/Code-Specter
 
 On newer Debian/Ubuntu releases `pip3 install` outside a virtual environment is blocked. Either add `--break-system-packages`, or make a venv first (`python3 -m venv ~/tools/venv && source ~/tools/venv/bin/activate`) and run the `pip3` lines inside it.
 
+**httpx name clash:** My Python tools (Personal_Scipts, VoidRecon, SmartSQL) depend on the Python `httpx` library, which installs its own `httpx` command. Inside a venv that command comes first on `PATH` and shadows ProjectDiscovery's httpx, so you get `Usage: httpx [OPTIONS] URL` / `No such option`. Pin the name to the Go binary with an alias — aliases win over `PATH`, even inside a venv:
+
+```bash
+echo 'alias httpx="$HOME/go/bin/httpx"' >> ~/.zshrc    # or ~/.bashrc
+source ~/.zshrc
+httpx -version    # should print projectdiscovery's httpx banner
+```
+
 | Tool | What it does here |
 |---|---|
 | `scope_filter.py` | Keeps only your domains and their subdomains, and strips out-of-scope entries from every step's output |
