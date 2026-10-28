@@ -238,27 +238,44 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
 
     *   **Phase 4: Directory and File Brute-Forcing**
 
-        14. **Dirsearch (General Wordlist):**
+        14. **Set up the output folders:**
             ```bash
-            dirsearch -l subdomains_alive.txt -x 500,502,429,404,400 -R 5 --random-agent -t 100 -F -o directory.txt -w ~/tools/wordlists/onelistforall.txt
+            mkdir -p DirSearch/General DirSearch/Extensions
             ```
-            *   **What:** Tries common directory/file names using a wordlist. `-l` targets live subdomains. `-x` excludes error codes. `-R` sets recursion depth. `--random-agent` helps avoid detection. `-t` is concurrency. `-F` follows redirects. `-w` specifies the wordlist.
-            *   **Why:** Finds hidden content not linked from the website.
-            *   **Note:** This step can take a *significant* amount of time, especially with a large wordlist like `onelistforall.txt` and a deep recursion level.  However, it can be run in the background while you proceed with other reconnaissance steps.  Using it with `dirsearch` can effectively map out the entire directory structure of the target application, potentially revealing a goldmine of hidden functionality and sensitive files – think of it as building your own detailed "blueprint" of the website.  This is why the output file is named `directory.txt`.
+            *   **What:** Each scan below writes one file per subdomain, so they get their own folders: `DirSearch/General/` for the wordlist scan and `DirSearch/Extensions/` for the extension scan.
+            *   **Why:** Hundreds of `dirsearch_*.txt` files dumped in the target folder are hard to read and search. One folder per scan type, one file per host, is easy to browse and easy to `grep`.
 
-        15. **Dirsearch (Targeted Extensions - Iterative):**  Run this loop in your terminal.
+        15. **Dirsearch (General Wordlist):**  Run this loop in your terminal.
             ```bash
-            while read -r subdomain; do
-            dirsearch -u "$subdomain" -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bkp,cache,cgi,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,sql.gz,sql.zip,sql.tar.gz,sql~,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,xml -x 500,502,429,404,400 -R 2 --random-agent -t 20 -F -o "dirsearch_extensions_$(echo "$subdomain" | sed 's/[^a-zA-Z0-9]/_/g').txt"
+            while read -r url; do
+                dirsearch -u "$url" -x 500,502,429,404,400 -R 5 --random-agent -t 100 -F -w ~/tools/wordlists/onelistforall.txt -o "DirSearch/General/$(echo "$url" | sed -E 's#^https://##; s#^http://(.*)#\1_http#; s#[:/]+#_#g; s#_+$##').txt"
             done < subdomains_alive.txt
             ```
-            *   **What:**  Runs `dirsearch` for *each* live subdomain, focusing on specific file extensions (`-e`).
+            *   **What:** Tries common directory/file names on *each* live subdomain using a wordlist, saving each host's results to its own file in `DirSearch/General/`. `-x` excludes error codes. `-R` sets recursion depth. `--random-agent` helps avoid detection. `-t` is concurrency. `-F` follows redirects. `-w` specifies the wordlist.
+            *   **Why:** Finds hidden content not linked from the website.
+            *   **Note:** This step can take a *significant* amount of time, especially with a large wordlist like `onelistforall.txt` and a deep recursion level.  However, it can be run in the background while you proceed with other reconnaissance steps.  Using it with `dirsearch` can effectively map out the entire directory structure of the target application, potentially revealing a goldmine of hidden functionality and sensitive files – think of it as building your own detailed "blueprint" of each subdomain.
+
+        16. **Dirsearch (Targeted Extensions - Iterative):**  Run this loop in a second terminal.
+            ```bash
+            while read -r url; do
+                dirsearch -u "$url" -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bkp,cache,cgi,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,sql.gz,sql.zip,sql.tar.gz,sql~,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,xml -x 500,502,429,404,400 -R 2 --random-agent -t 20 -F -o "DirSearch/Extensions/$(echo "$url" | sed -E 's#^https://##; s#^http://(.*)#\1_http#; s#[:/]+#_#g; s#_+$##').txt"
+            done < subdomains_alive.txt
+            ```
+            *   **What:**  Runs `dirsearch` for *each* live subdomain, focusing on specific file extensions (`-e`), saving each host's results to its own file in `DirSearch/Extensions/`.
             *   **Why:** Targets potentially sensitive file types (configs, backups, etc.).
-            *   **Note:** This iterative approach, while also potentially time-consuming, can be run concurrently with other tasks.  It's a more focused attack than the general brute-force, increasing the chances of finding specific types of sensitive files on each subdomain.  Because it runs individually for each subdomain, the output is organized into separate files (`dirsearch_extensions_<subdomain>.txt`), making analysis easier.
+            *   **Note:** This iterative approach, while also potentially time-consuming, can be run concurrently with the general scan.  It's a more focused attack than the general brute-force, increasing the chances of finding specific types of sensitive files on each subdomain.
+
+        17. **Searching the Results:**
+            Files are named after the host: `https://api.target.com` → `api.target.com.txt`, `http://dev.target.com:8080` → `dev.target.com_8080_http.txt`. To search across all of them:
+            ```bash
+            grep -rhE '^(200|301|302|401|403)' DirSearch/ | sort -u            # everything interesting, all hosts
+            grep -rE '^200' DirSearch/Extensions/                                # extension hits, with the file (host) each came from
+            grep -rlE '\.(env|bak|sql|zip)' DirSearch/                           # which hosts have backups/configs
+            ```
 
     *   **Phase 5: JavaScript Analysis**
 
-        16. **Download the JavaScript:**
+        18. **Download the JavaScript:**
             ```bash
             mkdir -p js
             cat alljs.txt | inscope | while read -r url; do
@@ -268,14 +285,14 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **What:** Saves a local copy of every in-scope JS file.
             *   **Why:** The next steps scan files on disk, and you'll want them for manual review anyway.
 
-        17. **Secrets (secretscan.py):**
+        19. **Secrets (secretscan.py):**
             ```bash
             python3 ~/tools/Personal_Scipts/recon/secretscan.py -r js -o secrets.jsonl
             ```
             *   **What:** [secretscan.py](https://github.com/CypherNova1337/Personal_Scipts) matches known credential formats (AWS, GCP, GitHub, Slack, Stripe, JWT, private keys) and scores Shannon entropy to catch unknown high-randomness tokens.
             *   **Why:** Finds potentially exposed credentials, with far less noise than keyword matching.
 
-        18. **Firebase and DOM Sinks (gf):**
+        20. **Firebase and DOM Sinks (gf):**
             ```bash
             gf firebase js/ > firebase_hits.txt
             gf js-sinks js/ > js_sinks.txt
@@ -288,7 +305,7 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             nuclei -t ~/tools/Firebase_Nuclei/firebase-discovery.yaml -u <FIREBASE_PROJECT_ID>
             ```
 
-        19. **Source Maps (sourcemapper):**
+        21. **Source Maps (sourcemapper):**
             ```bash
             cat alljs.txt | inscope | while read -r url; do
                 sourcemapper -jsurl "$url" -output "sourcemaps/$(echo "$url" | md5sum | cut -c1-16)"
@@ -297,34 +314,34 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **What:** When a JS file references a source map, [sourcemapper](https://github.com/cyphernova1337/sourcemapper) rebuilds the original source tree from it.
             *   **Why:** Original source has comments, internal routes and logic that minified bundles hide. Run `secretscan.py -r sourcemaps` on the result too.
 
-        20. **Code Specter (Manual):** Install the [Code-Specter](https://github.com/CypherNova1337/Code-Specter) bookmarklet and click it on the target's key pages, especially behind a login.
+        22. **Code Specter (Manual):** Install the [Code-Specter](https://github.com/CypherNova1337/Code-Specter) bookmarklet and click it on the target's key pages, especially behind a login.
             *   **What:** Reports developer notes and user-controlled input flowing into `innerHTML`, `eval` or `document.write`, right in the browser.
             *   **Why:** It sees the JS that's actually loaded in your session, including what an anonymous crawler never gets.
 
     *   **Phase 6: Vulnerability Scanning with Nuclei**
 
-        21. **Nuclei (Personal Templates):**
+        23. **Nuclei (Personal Templates):**
             ```bash
             nuclei -list subdomains_alive.txt -t ~/tools/Personal_Nuclei_Templates/ -o nuclei_personal.txt
             ```
             *   **What:** Runs my [Personal_Nuclei_Templates](https://github.com/CypherNova1337/Personal_Nuclei_Templates): exposures (`.env`, `.git`, cloud credentials, backups, source maps), misconfigurations (CORS, CRLF, debug modes, actuators), CVEs, takeovers and technology discovery.
             *   **Why:** Each template only fires on corroborated evidence, so the results are worth triaging. Start here.
 
-        22. **Nuclei (DAST Fuzzing):**
+        24. **Nuclei (DAST Fuzzing):**
             ```bash
             cat filterparams.txt | nuclei -t ~/tools/Personal_Nuclei_Templates/vulnerabilities/ -t ~/tools/Personal_Nuclei_Templates/fuzzing/ -dast -o nuclei_dast.txt
             ```
             *   **What:** Fuzzes the query parameters in your URLs for SQLi, LFI, SSRF, SSTI and open redirects.
             *   **Why:** Catches the common injection classes across every parameter at once, before the dedicated tools in Phase 7 go deeper.
 
-        23. **Nuclei (JS Exposures):**
+        25. **Nuclei (JS Exposures):**
             ```bash
             cat alljs.txt | inscope | nuclei -t ~/nuclei-templates/http/exposures/ -c 30 -o nuclei_js_exposures.txt
             ```
             *   **What:** Scans JS files for common exposures using the community templates.
             *   **Why:** Identifies potential security issues in JavaScript code.
 
-        24. **Nuclei (General CVEs, OSINT, Tech):**
+        26. **Nuclei (General CVEs, OSINT, Tech):**
             ```bash
             nuclei -list subdomains_alive.txt -tags cve,osint,tech -o nuclei_general.txt
             ```
@@ -333,28 +350,28 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
 
     *   **Phase 7: Specialized Checks and Tools**
 
-        25. **Subdomain Takeover:**
+        27. **Subdomain Takeover:**
             ```bash
             inscope subdomains.txt | nuclei -t ~/tools/Personal_Nuclei_Templates/takeovers/ -o subdomaintakeover.txt
             ```
             *   **What:** Checks every subdomain (live or not) for dangling DNS pointing at unclaimed services.
             *   **Why:** Prevents attackers from hijacking subdomains. Dead subdomains are the ones that get taken over, so this uses `subdomains.txt`, not just the live list.
 
-        26. **CORS, CRLF and Hop-by-Hop Headers (webscan.py):**
+        28. **CORS, CRLF and Hop-by-Hop Headers (webscan.py):**
             ```bash
             python3 ~/tools/Personal_Scipts/exploit/webscan.py all -i subdomains_alive.txt -o webscan_findings.jsonl
             ```
             *   **What:** [webscan.py](https://github.com/CypherNova1337/Personal_Scipts) tests CORS (reflected origin, `null`, prefix/suffix/subdomain bypasses, unescaped-dot regex, wildcard with credentials), CRLF injection, and front ends that let `Connection:` strip headers.
             *   **Why:** CORS issues allow unauthorized data access, CRLF leads to header and response manipulation, and hop-by-hop abuse can bypass header-based access controls. Replaces Corsy and the separate CORS/CRLF Nuclei runs.
 
-        27. **Blind SSRF and Open Redirects (NovaLure):**
+        29. **Blind SSRF and Open Redirects (NovaLure):**
             ```bash
             python3 ~/tools/NovaLure/NovaLure.py -i filterparams.txt --skip-assetfinder --skip-httprobe -o novalure_report.md
             ```
             *   **What:** [NovaLure](https://github.com/CypherNova1337/NovaLure) sprays URL-shaped parameters and headers with Interactsh callback URLs, and reports anything that phones home. It fuzzes open redirects in the same pass.
             *   **Why:** Blind SSRF never shows in the response. `--skip-assetfinder` matters: you already have your subdomains, and NovaLure's own discovery doesn't know about `out_of_scope.txt`.
 
-        28. **LFI (LFI-Machine):**
+        30. **LFI (LFI-Machine):**
             ```bash
             cat filterparams.txt | gf lfi | inscope > lfi_candidates.txt
             lfimachine -l lfi_candidates.txt -o lfi_loot/ --json lfi_results.json
@@ -362,7 +379,7 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **What:** [LFI-Machine](https://github.com/CypherNova1337/LFI-Machine) fingerprints the stack, learns the target's normal and error responses, then adapts traversal depth and encoding until a payload survives.
             *   **Why:** It confirms a hit by the *structure* of what came back, so base64 and wrapped responses still register — the ones a `grep root:` approach misses.
 
-        29. **SQL Injection (SmartSQL):**
+        31. **SQL Injection (SmartSQL):**
             ```bash
             cat filterparams.txt | gf sqli | inscope > sqli_candidates.txt
             while read -r url; do smartsql -u "$url" --random-agent; done < sqli_candidates.txt | tee smartsql_results.txt
@@ -370,7 +387,7 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **What:** [SmartSQL](https://github.com/CypherNova1337/SmartSQL) tests every parameter with boolean, error, time and union techniques, and watches how the target blocks it — escalating obfuscation when blocked and backing off when throttled.
             *   **Why:** No need to pick the right tamper script up front.
 
-        30. **RCE, SSTI and Command Injection (VoidStrike):**
+        32. **RCE, SSTI and Command Injection (VoidStrike):**
             ```bash
             cat filterparams.txt | gf rce | inscope > rce_candidates.txt
             cat filterparams.txt | gf ssti | inscope | anew rce_candidates.txt
@@ -379,14 +396,14 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **What:** [VoidStrike](https://github.com/CypherNova1337/VoidStrike) covers command injection, SSTI, code injection, expression language/JNDI, deserialisation and upload in one pass, with out-of-band confirmation.
             *   **Why:** RCE hides in many unrelated shapes. Copy `scope.example.yaml` from the VoidStrike repo to `scope.yaml`, put `*.target.com` under `in_scope` and your `out_of_scope.txt` hosts under `out_of_scope`.
 
-        31. **XSS (dalfox):** Replace `your_xss_endpoint_here` with your blind XSS collaborator URL.
+        33. **XSS (dalfox):** Replace `your_xss_endpoint_here` with your blind XSS collaborator URL.
             ```bash
             cat filterparams.txt | gf xss | inscope | dalfox pipe -b your_xss_endpoint_here -o dalfox_xss.txt
             ```
             *   **What:**  Finds reflected, stored and blind Cross-Site Scripting (XSS) vulnerabilities in the parameters `gf xss` flags.
             *   **Why:** Prevents attackers from injecting malicious scripts.
 
-        32. **IDOR (Auto-IDOR):** Needs two accounts on the target.
+        34. **IDOR (Auto-IDOR):** Needs two accounts on the target.
             ```bash
             cat filterparams.txt | gf idor | inscope > idor_candidates.txt
             auto-idor quick -u 'https://app.target.com/api/invoices/{id}' --token-a "$USER_A_JWT" --token-b "$USER_B_JWT" --owns-a 1041,1042 --owns-b 2001,2002
@@ -396,14 +413,14 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
 
     *   **Phase 8: Infrastructure**
 
-        33. **Origin IPs Behind a CDN (VoidOrigin):**
+        35. **Origin IPs Behind a CDN (VoidOrigin):**
             ```bash
             python3 ~/tools/VoidOrigin/voidorigin.py --targets domains.txt -o voidorigin.json
             ```
             *   **What:** [VoidOrigin](https://github.com/CypherNova1337/VoidOrigin) gathers candidate IPs from certificate transparency, a subdomain brute force and Shodan (`export SHODAN_API_KEY=...`), removes known CDN ranges, then connects to each candidate presenting the target's hostname and scores how well it matches the real site.
             *   **Why:** A reachable origin means talking to the app with the WAF and rate limits stepped over. Check the program's rules on testing origin IPs directly.
 
-        34. **VPN and Remote-Access Gateways (VPNFinder):**
+        36. **VPN and Remote-Access Gateways (VPNFinder):**
             ```bash
             while read -r domain; do
                 python3 ~/tools/VPNFinder/vpn-finder.py "$domain" --min-confidence 70 -o "vpnfinder_$domain.json"
@@ -412,7 +429,7 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **What:** [VPNFinder](https://github.com/CypherNova1337/VPNFinder) finds FortiGate, GlobalProtect, Cisco ASA, Citrix, Pulse/Ivanti and similar gateways, names the product with a confidence score, and maps it to relevant CVEs.
             *   **Why:** These are the front door to the internal network, with a long history of actively exploited bugs. Check its findings against `out_of_scope.txt` before going further — it discovers hosts on its own. Identifying a portal is recon; trying credentials against it is not.
 
-        35. **Full Port Scan with Naabu + Nmap:**
+        37. **Full Port Scan with Naabu + Nmap:**
             ```bash
             naabu -list subdomains.txt -c 50 -nmap-cli 'nmap -sV -sC -Pn' -o naabu-full.txt
             ```
@@ -421,14 +438,14 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
 
     *   **Phase 9: Virtual Host Discovery**
 
-        36. **Extract IPs from naabu results:**
+        38. **Extract IPs from naabu results:**
             ```bash
             grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' naabu-full.txt | sort -u > ips.txt
             ```
             * **What**: Gets the IP addresses
             *   **Why**: used for virtual host discovery
 
-        37. **Vhost Discovery (ffuf):** Run this loop.
+        39. **Vhost Discovery (ffuf):** Run this loop.
             ```bash
             while read -r ip; do
                 ffuf -w subdomains.txt:FUZZ -u https://$ip -H "Host: FUZZ" -fs 0 -o vhost_results_"$ip".json -of json
@@ -445,7 +462,7 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
 
     *   **Phase 10: Screenshotting (httpx)**
 
-        38. **Take screenshots of live subdomains:**
+        40. **Take screenshots of live subdomains:**
             ```bash
             httpx -l subdomains_alive.txt -screenshot -srd screenshots
             ```
