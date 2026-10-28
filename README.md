@@ -265,12 +265,20 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **Why:** Targets potentially sensitive file types (configs, backups, etc.).
             *   **Note:** This iterative approach, while also potentially time-consuming, can be run concurrently with the general scan.  It's a more focused attack than the general brute-force, increasing the chances of finding specific types of sensitive files on each subdomain.
 
-        17. **Searching the Results:**
-            Files are named after the host: `https://api.target.com` → `api.target.com.txt`, `http://dev.target.com:8080` → `dev.target.com_8080_http.txt`. To search across all of them:
+        17. **Cleaning and Searching the Results:**
+            **Soft-404 cleanup (dirsift.py):** Some sites answer every path with a real-looking page that's actually a custom 404, so a long run comes back with thousands of "hits" that all have the same size. Once both scans finish:
             ```bash
-            grep -rhE '^(200|301|302|401|403)' DirSearch/ | sort -u            # everything interesting, all hosts
-            grep -rE '^200' DirSearch/Extensions/                                # extension hits, with the file (host) each came from
-            grep -rlE '\.(env|bak|sql|zip)' DirSearch/                           # which hosts have backups/configs
+            python3 ~/tools/WebRecon-Arsenal/dirsift.py DirSearch/ -o dirsearch_results.txt --show-dropped
+            ```
+            For each host it finds the status + size combinations that repeat (10 or more times by default, change with `-t`). It drops them as that host's soft-404 and writes everything left, from every file in both folders, into one deduplicated `dirsearch_results.txt` sorted by host. Redirects are grouped by where they point, so hundreds of paths that all redirect to `/login` are dropped, but real folders (`/admin` → `/admin/`) are kept. `--show-dropped` prints what it removed per host (e.g. `dropped 4500 x 200 4KB`), so you can sanity-check it.
+
+            dirsearch rounds sizes (`4KB`), so a real page that rounds to the same size as the soft-404 gets dropped with it. On hosts that matter, look at the dropped sizes and re-check by hand. dirsearch's own `--exclude-sizes` works only when you know the size before scanning, and every subdomain's 404 is a different size, which is why this runs afterwards.
+
+            Files in `DirSearch/` are named after the host: `https://api.target.com` → `api.target.com.txt`, `http://dev.target.com:8080` → `dev.target.com_8080_http.txt`. To search the cleaned results:
+            ```bash
+            grep -E '^(200|401|403)' dirsearch_results.txt                      # pages that exist or are protected
+            grep -E '\.(env|bak|sql|zip|config|old)' dirsearch_results.txt        # backups and configs
+            grep 'api.target.com' dirsearch_results.txt                         # one host
             ```
 
     *   **Phase 5: JavaScript Analysis**
