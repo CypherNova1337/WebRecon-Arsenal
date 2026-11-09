@@ -83,8 +83,8 @@ httpx -version    # should print projectdiscovery's httpx banner
 | `dirsift.py` | Drops each host's soft-404 noise from dirsearch results and merges them into one file |
 | [VoidRecon](https://github.com/CypherNova1337/VoidRecon) | Full recon pipeline with enforced scope (`voidrecon setup` after install to add API keys) |
 | [DNS-Helix](https://github.com/CypherNova1337/dns-helix) | Subdomain permutation and fast resolving (replaces dnsgen + puredns) |
-| [paramvoid](https://github.com/CypherNova1337/paramvoid) | Hidden HTTP parameter discovery |
-| [SecretSniffer](https://github.com/CypherNova1337/SecretSniffer) | Finds secrets in JS, source maps, archived JS and git history, and verifies them live with the provider |
+| [paramvoid](https://github.com/CypherNova1337/paramvoid) | Hidden HTTP parameter discovery, graded high / medium / low confidence |
+| [SecretSniffer](https://github.com/CypherNova1337/SecretSniffer) | Finds secrets in JS, source maps, archived JS and git history, and verifies them live (vendor keys with the provider, own-API keys against the target's API) |
 | [sourcemapper](https://github.com/cyphernova1337/sourcemapper) | Rebuilds original JavaScript source from source maps |
 | [Personal_Scipts](https://github.com/CypherNova1337/Personal_Scipts) | `webscan.py` (CORS, CRLF, hop-by-hop; replaces Corsy and crlfuzz) and `secretscan.py` (offline secret pass) |
 | [NovaLure](https://github.com/CypherNova1337/NovaLure) | Blind SSRF and open redirects via out-of-band callbacks (replaces OpenRedirex) |
