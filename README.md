@@ -293,12 +293,24 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             *   **What:** Saves a local copy of every in-scope JS file.
             *   **Why:** The next steps scan files on disk, and you'll want them for manual review anyway.
 
-        19. **Secrets (secretscan.py):**
+        19. **Secrets (SecretSniffer):**
             ```bash
-            python3 ~/tools/Personal_Scipts/recon/secretscan.py -r js -o secrets.jsonl
+            cat subdomains_alive.txt alljs.txt | inscope | secretsniffer -wayback -wayback-limit 200 -o secretsniffer.jsonl -md secretsniffer_report.md
             ```
-            *   **What:** [secretscan.py](https://github.com/CypherNova1337/Personal_Scipts) matches known credential formats (AWS, GCP, GitHub, Slack, Stripe, JWT, private keys) and scores Shannon entropy to catch unknown high-randomness tokens.
-            *   **Why:** Finds potentially exposed credentials, with far less noise than keyword matching.
+            *   **What:** [SecretSniffer](https://github.com/CypherNova1337/SecretSniffer) loads each live subdomain and JS file, follows the scripts they load (including lazy chunks from Next.js/webpack/Vite manifests that `<script>` tags never reference), pulls source maps (even unreferenced ones), and with `-wayback` also scans archived JavaScript for each host. It throws out placeholders, vendor examples and keys that are public by design (referrer-locked Google keys, Stripe publishable keys, Supabase `anon`), then checks each remaining credential with one read-only call to the provider that issued it. Dead keys are dropped; live ones come back with who they belong to, what they can reach, and a command to reproduce the check.
+            *   **Why:** A regex secret scan gives you a wall of "API keys" that are almost all dead or meaningless. This leaves **verified** findings (the provider confirmed the key works) and **likely** ones (private keys, database URLs, anything with no provider check) with a score and the reason behind it. `secretsniffer_report.md` is ready to drop into a submission.
+            *   **Note:** **Flags go before the targets.** SecretSniffer stops reading flags at the first URL or file, so `secretsniffer js/ -no-verify` silently ignores `-no-verify` and still checks keys.
+            *   **Note:** Verification uses the key. Every check is read-only, but it is an authenticated request made with somebody else's credential. If the program's rules don't allow that, add `-no-verify` and findings are scored offline instead.
+            *   **Note:** It loads every script the pages reference, the way a browser would, and only skips public CDNs and analytics vendors. A page can still pull a script from an out-of-scope subdomain or a partner's domain, so check each finding's `where` line against `out_of_scope.txt` before reporting it. `-wayback` is throttled by the archive and slow on many hosts; lower `-wayback-limit` or drop `-wayback` for a quicker first pass.
+            *   **Note:** Add `-H "Cookie: session=..."` to scan the logged-in app's JavaScript, which is often where the admin routes and keys live. Add `-show-dropped` to see everything that was discarded and why.
+
+            If a `/.git/` directory turned up exposed (Phase 4 or the `git-config-exposure` template in Phase 6), dump it with [git-dumper](https://github.com/arthaud/git-dumper) and scan the whole history, where "deleted" secrets still live:
+            ```bash
+            git-dumper https://dev.target.com/.git/ gitdump/
+            secretsniffer -o secretsniffer_git.jsonl -git gitdump/
+            ```
+
+            For a second, offline opinion that catches unknown high-entropy tokens, [secretscan.py](https://github.com/CypherNova1337/Personal_Scipts) still works on the downloaded files: `python3 ~/tools/Personal_Scipts/recon/secretscan.py -r js -o secrets.jsonl`
 
         20. **Firebase and DOM Sinks (gf):**
             ```bash
@@ -320,7 +332,7 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             done
             ```
             *   **What:** When a JS file references a source map, [sourcemapper](https://github.com/cyphernova1337/sourcemapper) rebuilds the original source tree from it.
-            *   **Why:** Original source has comments, internal routes and logic that minified bundles hide. Run `secretscan.py -r sourcemaps` on the result too.
+            *   **Why:** Original source has comments, internal routes and logic that minified bundles hide. SecretSniffer already reads source maps, but if sourcemapper rebuilt anything it missed, scan it too: `secretsniffer -o secretsniffer_maps.jsonl sourcemaps/`.
 
         22. **Code Specter (Manual):** Install the [Code-Specter](https://github.com/CypherNova1337/Code-Specter) bookmarklet and click it on the target's key pages, especially behind a login.
             *   **What:** Reports developer notes and user-controlled input flowing into `innerHTML`, `eval` or `document.write`, right in the browser.
