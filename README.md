@@ -231,10 +231,16 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             ```bash
             cat filterparams.txt | grep -viE "\.(js|css|png|jpg|jpeg|gif|svg|woff2?|ico)(\?|$)" | sed 's/?.*//' | sort -u > endpoints.txt
             paramvoid -i endpoints.txt -oJ paramvoid_results.json
+            paramvoid -i endpoints.txt -disable-redirects -oJ paramvoid_noredirect.json
             ```
-            *   **What:** [paramvoid](https://github.com/CypherNova1337/paramvoid) learns what a normal response looks like, then tests its built-in wordlist in batches and reports the parameters that change the response.
-            *   **Why:** Parameters the app reads but never links to (`debug`, `admin`, `is_staff`, `user_id`) are where access-control bugs and hidden debug modes live.
-            *   **Note:** Add `-headers 'Cookie: session=...'` to test the logged-in surface — that's usually the interesting half. A second pass with `-casing likeThis` or `-casing like_this` finds parameters a single pass misses.
+            Split the results by confidence:
+            ```bash
+            jq -r 'to_entries[] | .key as $u | .value.findings[]? | select(.confidence != "low") | "\(.confidence)\t\(.param)\t\($u)"' paramvoid_*.json | sort -u > paramvoid_real.txt
+            jq -r 'to_entries[] | .key as $u | .value.findings[]? | select(.reason == "reflection") | "\($u)?\(.param)=pvtest"' paramvoid_*.json | sort -u > paramvoid_reflected.txt
+            ```
+            *   **What:** [paramvoid](https://github.com/CypherNova1337/paramvoid) learns what a normal response looks like, then tests its built-in wordlist in batches and reports the parameters that change the response. Each hit is graded: **high** (status code or redirect changed: the server branches on it), **medium** (body or headers changed beyond an echo), **low** (reflection only, a static file, or `site-wide` framework behaviour).
+            *   **Why:** Parameters the app reads but never links to (`debug`, `admin`, `is_staff`, `user_id`) are where access-control bugs and hidden debug modes live. On SPA and CMS targets most raw hits are framework echo, so the split matters. `paramvoid_real.txt` (high + medium) is what to test by hand. `paramvoid_reflected.txt` turns reflection-only hits into test URLs for the XSS step (step 33).
+            *   **Note:** The `-disable-redirects` run catches parameters whose only effect is a redirect. With redirects followed, those land on a normal-looking page and look like nothing happened. Add `-headers 'Cookie: session=...'` to test the logged-in surface — that's usually the interesting half. A pass with `-casing likeThis` or `-casing like_this` finds parameters a single pass misses.
 
     *   **Phase 4: Directory and File Brute-Forcing**
 
@@ -297,10 +303,17 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
             ```bash
             cat subdomains_alive.txt alljs.txt | inscope | secretsniffer -wayback -wayback-limit 200 -o secretsniffer.jsonl -md secretsniffer_report.md
             ```
-            *   **What:** [SecretSniffer](https://github.com/CypherNova1337/SecretSniffer) loads each live subdomain and JS file, follows the scripts they load (including lazy chunks from Next.js/webpack/Vite manifests that `<script>` tags never reference), pulls source maps (even unreferenced ones), and with `-wayback` also scans archived JavaScript for each host. It throws out placeholders, vendor examples and keys that are public by design (referrer-locked Google keys, Stripe publishable keys, Supabase `anon`), then checks each remaining credential with one read-only call to the provider that issued it. Dead keys are dropped; live ones come back with who they belong to, what they can reach, and a command to reproduce the check.
+            *   **What:** [SecretSniffer](https://github.com/CypherNova1337/SecretSniffer) loads each live subdomain and JS file, follows the scripts they load (including lazy chunks from Next.js/webpack/Vite manifests that `<script>` tags never reference), pulls source maps (even unreferenced ones), and with `-wayback` also scans archived JavaScript for each host. It throws out placeholders, vendor examples and keys that are public by design (referrer-locked Google keys, Stripe publishable keys, Supabase `anon`), then checks each remaining credential: vendor keys with one read-only call to the provider that issued them, and keys for the target's own API against that API. Dead keys are dropped; live ones come back with who they belong to, what they can reach, and a command to reproduce the check.
             *   **Why:** A regex secret scan gives you a wall of "API keys" that are almost all dead or meaningless. This leaves **verified** findings (the provider confirmed the key works) and **likely** ones (private keys, database URLs, anything with no provider check) with a score and the reason behind it. `secretsniffer_report.md` is ready to drop into a submission.
             *   **Note:** **Flags go before the targets.** SecretSniffer stops reading flags at the first URL or file, so `secretsniffer js/ -no-verify` silently ignores `-no-verify` and still checks keys.
             *   **Note:** Verification uses the key. Every check is read-only, but it is an authenticated request made with somebody else's credential. If the program's rules don't allow that, add `-no-verify` and findings are scored offline instead.
+            *   **Note:** Since SecretSniffer 1.2.0, keys for the target's own API (`x-api-key` headers, hardcoded `Basic` auth) are tested against that API: the same GET with no key, a made-up key and the real key, on the API root and up to three safe-looking paths found next to the key. Those requests go to whatever API host the code points at, and they bypass `-proxy`. If `out_of_scope.txt` excludes any API hosts, do an offline pass first and check where it would go:
+                ```bash
+                cat subdomains_alive.txt alljs.txt | inscope | secretsniffer -no-verify -o secretsniffer_offline.jsonl
+                jq -r '.info.api_host // empty' secretsniffer_offline.jsonl | sort -u > api_hosts.txt
+                grep -vxFf <(inscope api_hosts.txt) api_hosts.txt          # API hosts that are out of scope
+                ```
+                Nothing printed means it's safe to run the verifying command above. Findings for the target's own API list the `api host`, `api header` and `api paths`, so you can also test them by hand.
             *   **Note:** It loads every script the pages reference, the way a browser would, and only skips public CDNs and analytics vendors. A page can still pull a script from an out-of-scope subdomain or a partner's domain, so check each finding's `where` line against `out_of_scope.txt` before reporting it. `-wayback` is throttled by the archive and slow on many hosts; lower `-wayback-limit` or drop `-wayback` for a quicker first pass.
             *   **Note:** Add `-H "Cookie: session=..."` to scan the logged-in app's JavaScript, which is often where the admin routes and keys live. Add `-show-dropped` to see everything that was discarded and why.
 
@@ -419,6 +432,7 @@ Lines starting with `!` are exclusions. VoidRecon scopes by host, so keyword and
         33. **XSS (dalfox):** Replace `your_xss_endpoint_here` with your blind XSS collaborator URL.
             ```bash
             cat filterparams.txt | gf xss | inscope | dalfox pipe -b your_xss_endpoint_here -o dalfox_xss.txt
+            cat paramvoid_reflected.txt | dalfox pipe -b your_xss_endpoint_here -o dalfox_xss_paramvoid.txt
             ```
             *   **What:**  Finds reflected, stored and blind Cross-Site Scripting (XSS) vulnerabilities in the parameters `gf xss` flags.
             *   **Why:** Prevents attackers from injecting malicious scripts.
